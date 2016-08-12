@@ -3,6 +3,25 @@ package REST::Buildbot;
 use strict;
 use warnings;
 
+use Moose;
+use REST::Buildbot::Change;
+use REST::Buildbot::BuildSet;
+use REST::Buildbot::BuildRequest;
+use REST::Buildbot::Build;
+use REST::Buildbot::Builder;
+use REST::Buildbot::Step;
+use REST::Buildbot::SourceStamp;
+use REST::Buildbot::Log;
+use LWP::UserAgent;
+use JSON;
+
+has 'url' => (is => 'ro', isa => 'Str', required => 1);
+has '_ua' => (is => 'ro', isa => 'LWP::UserAgent',
+             default => sub {LWP::UserAgent->new});
+has '_builders' => (is => 'ro', isa => 'HashRef[REST::Buildbot::Builder]',
+                   lazy => 1, builder => '_build_builders');
+
+
 =head1 NAME
 
 REST::Buildbot - Interface to the Buildbot v2 REST API
@@ -18,34 +37,688 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+This is an interface to the REST API provided by Buildbot instances. Most
+object types can be fetched by name or id, and most object types can be
+used to look up associated objects. The individual objects have no methods,
+but do have accessors for all of the data returned by the REST API. Most
+attributes are pure perl data types, the only exception is BuildSets and
+Changes, both of which have an attribute that contains a
+REST::BuildBot::SourceStamp or an arrayref of them.
 
-Perhaps a little code snippet.
+    use REST::Buildbot;
 
-    use HTTP::Buildbot;
+    my $bb = REST::Buildbot->new(url => 'http://localhost:8010/api/v2/');
 
-    my $foo = HTTP::Buildbot->new();
-    ...
+    # Get the 'linux' builder's first build
+    my $linux_builder = $bb->get_builder_by_name('linux');
+    my $build = $bb->get_build_by_builder_and_number($linux_builder, 1);
 
-=head1 EXPORT
+    # Learn about this build
+    my $buildrequest = $bb->get_buildrequest_by_id($build->buildrequestid);
+    my $buildset = $bb->get_buildset_by_id($buildrequest->buildsetid);
+    my $sourcestamp = $buildset->sourcestamps->[0];
+    # Branch, revision ID, and commit message are in the SourceStamp object
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+    # Look up all the builds with a certain revision
+    my $rev = '0123456789abcdef...';
+    my $buildsets = $bb->get_buildsets_by_revision($rev);
+    # There may be several, choose in your own way
+    my $buildset = $buildsets->[0];
+    # Find all the builds on this buildset, and explore some information
+    my $buildrequests = $bb->get_buildrequests_by_buildset($bsid);
+    foreach my $buildrequest (@$buildrequests) {
+        my $brid = $buildrequest->buildrequestid;
+        my $builds = $bb->get_builds_by_buildrequest($brid);
+        # Again, choose one build. Usually most recent, older ones may
+        # be cancels or retries
+        my $build = $builds->[0];
+        my $steps = $bb->get_steps_by_build($build->buildid);
+        # The last step is make test for me
+        my $make_test = $steps->[-1];
+        my $logs = $bb->get_logs_by_step($make_test->stepid);
+        # Choose which log to use - probably by looping and
+        # comparing against name
+        my $log;
+        foreach my $l (@$logs) {
+            if ($l->name =~ /stdio/) {
+                $log = $l;
+                last;
+            }
+        }
+        die "No stdio log" unless $log;
+        my $stdio_text = $bb->get_log_text($log->logid);
+    }
 
-=head1 SUBROUTINES/METHODS
+=head1 AVAILABLE METHODS
 
-=head2 function1
+The following subtypes are available: Build, Builder, BuildRequest,
+BuildSet, Change, Log, SourceStamp, Step. Of these, all 8 have an
+ID which they can be looked up by, for example, get_build_by_id, or
+they can all be looked up at once by, for example, get_builds.
+
+Additionally, Builders can be looked up by name, Changes can be
+looked up by revision. These methods use names like
+get_builder_by_name.
+
+Builds can also be looked up using the build "number" (which is
+unique by builder, but not globally unique - it is distinct from
+the build id). This method requires the Builder object and the
+build number, and is called get_build_by_builder_and_number.
+
+The objects themselves have a number of interrelationships. Most
+of these are one-to-many, even though some of them are one-to-one
+under most normal cases. For example, buildset to buildrequest is
+expected to be one-to-many (if one scheduler triggers more than
+one builder), but usually each buildrequest has only one build.
+There may be multiple builds per buildrequest if one of the builds
+was cancelled manually or due to a client restart. Here is a full
+list of valid relationships:
+
+=over 4
+
+=item Builder to Build
+=item Builder to BuildRequest
+=item BuildSet to BuildRequest
+=item BuildRequest to Build
+=item Build to Step
+=item Step to Log
+
+=back
+
+Each of the above is a one-to-many relationship. For example,
+get_builds_by_builder returns an arrayref of Builds, but
+get_builder_by_build returns a single Builder.
+
+Additionally, a Change is one-to-one with a SourceStamp, and
+a BuildSet is one-to-many with SourceStamps. Generally, you
+will not use this relationship, instead using a helper function
+like get_buildsets_by_revision or get_changes_by_revision if
+you have a source control revision, or the ->sourcestamp->*
+properties of a Change, or the ->sourcestamps->[$i]->*
+properties of a BuildSet, to get a source control revision.
+
+Finally, it is possible to get the text of a log object using
+get_log_text.
+
+=head 1 ERROR HANDLING
+
+REST::Buildbot will die on a LWP::UserAgent error or on calling a
+method without a required parameter. This is not guaranteed to
+remain the case, when I get around to it, I intend to improve that
+aspect of error handling.
+
+If no items are found for a query, REST::Buildbot will return undef,
+for methods returning a single object, or an empty array ref, for
+methods potentially returning multiple objects.
+
+=head 1 CACHING
+
+REST::Buildbot may cache the results of common calls, such as the
+list of all builders. In general, you should assume that data is no
+more recent than the first call made against a REST::Buildbot object.
+If you wish to ensure that cached data is not being used, for example,
+if you are using REST::Buildbot within an application that runs as a
+daemon, you should create a new REST::Buildbot object.
 
 =cut
 
-sub function1 {
+# Not a public API function - subject to change
+# Used by internal methods to access the REST API
+sub _get {
+    my $self = shift;
+    my $query = shift;
+
+    my $res = $self->_ua->get($self->url.$query);
+    die $res->status_line unless $res->is_success;
+
+    my $content = $res->decoded_content;
+    my $ret = decode_json($content);
+
+    return $ret;
 }
 
-=head2 function2
+sub _build_builders {
+    my $self = shift;
+
+    my $data = $self->_get('builders');
+
+    my $ret = {};
+
+    foreach my $b (@{$data->{'builders'}}) {
+        $ret->{$b->{'builderid'}} = Buildbot::Builder->new(%$b);
+    }
+
+    return $ret;
+}
+
+=head1 METHODS
+
+=head1 new
+
+Constructor. Takes one mandatory argument, the URL to the API of the
+Buildbot instance to use. Should end in /api/v2/.
+
+    my $bb = REST::Buildbot->new(url => 'http://localhost:8010/api/v2/');
+
+=head2 get_*
+
+This set of methods allows lookup of all objects of a given type that
+the buildbot instance has. It returns a reference to an array of those
+objects. If there are none, it returns an empty array.
+
+=over 4
+
+=item get_builds
+=item get_builders
+=item get_buildrequests
+=item get_buildsets
+=item get_changes
+=item get_logs
+=item get_sourcestamps
+=item get_steps
+
+=back
 
 =cut
 
-sub function2 {
+sub get_builds {
+    my $self = shift;
+
+    my $data = $self->_get('builds');
+
+    my $ret = [];
+
+    foreach my $b (@{$data->{'builds'}}) {
+        push @$ret, Buildbot::Build->new(%$b);
+    }
+
+    return $ret;
+}
+
+sub get_builders {
+    my $self = shift;
+
+    my $ret = @{$self->_builders}{sort {$a <=> $b} keys %{$self->_builders}};
+
+    return $ret;
+}
+
+sub get_buildrequests {
+    my $self = shift;
+
+    my $data = $self->_get('buildrequests');
+
+    my $ret = [];
+
+    foreach my $br (@{$data->{'buildrequests'}}) {
+        push @$ret, Buildbot::BuildRequest->new(%$br);
+    }
+
+    return $ret;
+}
+
+sub get_buildsets {
+    my $self = shift;
+
+    my $data = $self->_get('buildsets');
+
+    my $ret = [];
+
+    foreach my $bs (@{$data->{'buildsets'}}) {
+        push @$ret, Buildbot::BuildSet->new(%$bs);
+    }
+
+    return $ret;
+}
+
+sub get_changes {
+    my $self = shift;
+
+    my $data = $self->_get('changes');
+
+    my $ret = [];
+
+    foreach my $c (@{$data->{'changes'}}) {
+        push @$ret, Buildbot::Change->new(%$c);
+    }
+
+    return $ret;
+}
+
+sub get_logs {
+    my $self = shift;
+
+    my $data = $self->_get('logs');
+
+    my $ret = [];
+
+    foreach my $l (@{$data->{'logs'}}) {
+        push @$ret, Buildbot::Log->new(%$l);
+    }
+
+    return $ret;
+}
+
+sub get_sourcestamps {
+    my $self = shift;
+
+    my $data = $self->_get('sourcestamps');
+
+    my $ret = [];
+
+    foreach my $ss (@{$data->{'sourcestamps'}}) {
+        push @$ret, Buildbot::SourceStamp->new(%$ss);
+    }
+
+    return $ret;
+}
+
+sub get_steps {
+    my $self = shift;
+
+    my $data = $self->_get('steps');
+
+    my $ret = [];
+
+    foreach my $s (@{$data->{'steps'}}) {
+        push @$ret, Buildbot::Step->new(%$s);
+    }
+
+    return $ret;
+}
+
+=head2 get_*_by_id
+
+This set of methods allows looking up an item by its unique id. Looking
+up an item that does not exist is an error, and is currently handled by
+dying. In the future, this behavior may change, likely by having these
+methods return undef.
+
+=over 4
+
+=item get_build_by_id
+=item get_builder_by_id
+=item get_buildrequest_by_id
+=item get_buildset_by_id
+=item get_change_by_id
+=item get_log_by_id
+=item get_sourcestamp_by_id
+=item get_step_by_id
+
+=back
+
+=cut
+
+sub get_build_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('builds/'.$id);
+
+    my $ret = Buildbot::Build->new(%{$data->{'builds'}->[0]});
+
+    return $ret;
+}
+
+sub get_builder_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    die "No such builder with id $id" unless exists $self->_builders->{$id};
+    
+    my $ret = $self->_builders->{$id};
+
+    return $ret;
+}
+
+sub get_buildrequest_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('buildrequests/'.$id);
+
+    my $ret = Buildbot::BuildRequest->new(%{$data->{'buildrequests'}->[0]});
+
+    return $ret;
+}
+
+sub get_buildset_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('buildsets/'.$id);
+
+    my $ret = Buildbot::BuildSet->new(%{$data->{'buildsets'}->[0]});
+
+    return $ret;
+}
+
+sub get_change_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('changes/'.$id);
+
+    my $ret = Buildbot::Change->new(%{$data->{'changes'}->[0]});
+
+    return $ret;
+}
+
+sub get_log_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('logs/'.$id);
+
+    my $ret = Buildbot::Log->new(%{$data->{'logs'}->[0]});
+
+    return $ret;
+}
+
+sub get_sourcestamp_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('sourcestamps/'.$id);
+
+    my $ret = Buildbot::SourceStamp->new(%{$data->{'sourcestamps'}->[0]});
+
+    return $ret;
+}
+
+sub get_step_by_id {
+    my $self = shift;
+    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+
+    my $data = $self->_get('steps/'.$id);
+
+    my $ret = Buildbot::Step->new(%{$data->{'steps'}->[0]});
+
+    return $ret;
+}
+
+sub get_buildsets_by_revision {
+    my $self = shift;
+    my $rev = shift || die "get_buildsets_by_revision requires a revision";
+
+    my $data = $self->_get('buildsets');
+
+    my $ret = [];
+
+    foreach my $bs (@{$data->{'buildsets'}}) {
+        next unless (grep {$_->revision eq $rev} @{$bs->sourcestamps});
+        push @$ret, Buildbot::BuildSet->new(%$bs);
+    }
+
+    return $ret;
+}
+
+=head2 get_*_by_*
+
+This is the set of methods that employs the relationships between data
+types. In all cases, they take a single argument: an object of the type
+to be searched by.
+
+The following items return a reference to an array containing
+any number of the target type:
+
+=over 4
+
+=item get_buildrequests_by_builder
+=item get_buildrequests_by_buildset
+=item get_builds_by_builder
+=item get_builds_by_buildrequest
+=item get_steps_by_build
+=item get_logs_by_step
+=item get_sourcestamps_by_buildset
+
+=back
+
+The following items return an object of the target type, or die on failure.
+
+=over 4
+
+=item get_builder_by_buildrequest
+=item get_buildset_by_buildrequest
+=item get_builder_by_build
+=item get_buildrequest_by_build
+=item get_build_by_step
+=item get_step_by_log
+=item get_sourcestamp_by_change
+
+=cut
+
+sub get_buildrequests_by_builder {
+    my $self = shift;
+    my $builder = shift || die "get_buildrequests_by_builder requires a builder";
+
+    my $data = $self->_get('buildrequests?builderid='.$builder->builderid);
+
+    my $ret = [];
+
+    foreach my $br (@{$data->{'buildrequests'}}) {
+        push @$ret, Buildbot::BuildRequest->new(%$br);
+    }
+
+    return $ret;
+}
+
+sub get_buildrequests_by_buildset {
+    my $self = shift;
+    my $buildset = shift || die "get_buildrequests_by_buildset requires a buildset id";
+
+    my $data = $self->_get('buildrequests?buildsetid='.$buildset->bsid);
+
+    my $ret = [];
+
+    foreach my $br (@{$data->{'buildrequests'}}) {
+        push @$ret, Buildbot::BuildRequest->new(%$br);
+    }
+
+    return $ret;
+}
+
+sub get_builds_by_builder {
+    my $self = shift;
+    my $builder = shift || die "get_builds_by_builder requires a builder";
+
+    my $data = $self->_get('builds?builderid='.$builder->builderid);
+
+    my $ret = [];
+
+    foreach my $b (@{$data->{'builds'}}) {
+        push @$ret, Buildbot::Build->new(%$b);
+    }
+
+    return $ret;
+}
+
+sub get_builds_by_buildrequest {
+    my $self = shift;
+    my $request = shift || die "get_builds_by_buildrequest requires a buildrequest";
+
+    my $data = $self->_get('builds?buildrequestid='.$request->buildrequestid);
+
+    my $ret = [];
+
+    foreach my $b (@{$data->{'builds'}}) {
+        push @$ret, Buildbot::Build->new(%$b);
+    }
+
+    return $ret;
+}
+
+sub get_steps_by_build {
+    my $self = shift;
+    my $build = shift || die "get_steps_by_build requires a build";
+
+    my $data = $self->_get('builds/'.$build->buildid.'/steps');
+
+    my $ret = [];
+
+    foreach my $s (sort {$a->{'number'} <=> $b->{'number'}}
+                        @{$data->{'steps'}}
+    ) {
+        push @$ret, Buildbot::Step->new(%$s);
+    }
+
+    return $ret;
+}
+
+sub get_logs_by_step {
+    my $self = shift;
+    my $step = shift || die "get_logs_by_step requires a step";
+
+    my $data = $self->_get('steps/'.$step->stepid.'/logs');
+
+    my $ret = [];
+
+    foreach my $l (sort {$a->{'logid'} <=> $b->{'logid'}}
+                        @{$data->{'logs'}}
+    ) {
+        push @$ret, Buildbot::Log->new(%$l);
+    }
+
+    return $ret;
+}
+
+sub get_sourcestamps_by_buildset {
+    my $self = shift;
+    my $buildset = shift || die "get_sourcestamps_by_buildset requires a buildset";
+    
+    return $buildset->sourcestamps;
+}
+
+sub get_builder_by_buildrequest {
+    my $self = shift;
+    my $buildrequest = shift || die "get_builder_by_buildrequest requires a buildrequest";
+
+    return $self->get_builder_by_id($buildrequest->builderid);
+}
+
+sub get_buildset_by_buildrequest {
+    my $self = shift;
+    my $buildrequest = shift || die "get_buildset_by_buildrequest requires a buildrequest";
+
+    return $self->get_buildset_by_id($buildrequest->buildsetid);
+}
+
+sub get_builder_by_build {
+    my $self = shift;
+    my $build = shift || die "get_builder_by_build requires a build";
+
+    return $self->get_builder_by_id($build->builderid);
+}
+
+sub get_buildrequest_by_build {
+    my $self = shift;
+    my $build = shift || die "get_buildrequest_by_build requires a build";
+
+    return $self->get_buildrequest_by_id($build->buildrequestid);
+}
+
+sub get_build_by_step {
+    my $self = shift;
+    my $step = shift || die "get_build_by_step requires a step";
+
+    return $self->get_build_by_id($step->buildid);
+}
+
+sub get_step_by_log {
+    my $self = shift;
+    my $log = shift || die "get_step_by_log requires a log";
+
+    return $self->get_step_by_id($log->stepid);
+}
+
+sub get_sourcestamp_by_change {
+    my $self = shift;
+    my $change = shift || die "get_sourcestamp_by_change requires a change";
+
+    return $change->sourcestamp;
+}
+
+=head2 get_builder_by_name
+
+Looks up a builder by name. Returns a REST::Buildbot::Builder object.
+Dies if there is not exactly one builder with a matching name.
+
+=cut
+
+sub get_builder_by_name {
+    my $self = shift;
+    my $name = shift || die "get_builder_by_name requires a builder name";
+
+    my @res = grep {$_->name eq $name} values %{$self->_builders};
+    die "ambiguous builder name $name" if @res > 1;
+    die "no such builder name $name" if @res == 0;
+    my $ret = $res[0];
+
+    return $ret;
+}
+
+=head2 get_changes_by_revision
+
+Looks up changes by a revision string. Returns a reference to an array
+of REST::Buildbot::Change objects. If there are no results, the reference
+will be to an empty array.
+
+=cut
+
+sub get_changes_by_revision {
+    my $self = shift;
+    my $rev = shift || die "get_changes_by_revision requires a revision string";
+
+    my $data = $self->_get('changes?revision='.$rev);
+
+    my $ret = [];
+
+    foreach my $c (@{$data->{'changes'}}) {
+        push @$ret, Buildbot::Change->new(%$c);
+    }
+
+    return $ret;
+}
+
+=head2 get_build_by_builder_and_number
+
+Looks up a build using the Builder object and the build number.
+Returns a REST::Buildbot::Build object. Dies if there is no match.
+
+=cut
+
+sub get_build_by_builder_and_number {
+    my $self = shift;
+    my $builder = shift ||
+        die "get_build_by_builder_and_number requires a builder object";
+    my $buildnum = shift ||
+        die "get_build_by_builder_and_number requires a build number";
+
+    my $builderid = $builder->builderid;
+
+    my $data = $self->_get('builders/'.$builderid.'/builds/'.$buildnum);
+
+    my $ret = Buildbot::Build->new(%{$data->{'builds'}->[0]});
+
+    return $ret;
+}
+
+=head2 get_log_text
+
+Returns the contents of a log as a string. Dies on failure.
+
+=cut
+
+sub get_log_text {
+    my $self = shift;
+    my $log = shift || die "get_log_text requires a log";
+
+    my $res = $self->_ua->get($self->url.'logs/'.$log->logid.'/raw');
+    die $res->status_line unless $res->is_success;
+
+    my $ret = $res->decoded_content;
+
+    return $ret;
 }
 
 =head1 AUTHOR
