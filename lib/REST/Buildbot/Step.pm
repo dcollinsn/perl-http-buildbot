@@ -1,4 +1,4 @@
-package HTTP::Buildbot::Step;
+package REST::Buildbot::Step;
 
 use strict;
 use warnings;
@@ -18,7 +18,7 @@ has 'urls'         => (is => 'rw', isa => 'ArrayRef');
 
 =head1 NAME
 
-HTTP::Buildbot::Step - The great new HTTP::Buildbot::Step!
+REST::Buildbot::Step - The great new REST::Buildbot::Step!
 
 =head1 VERSION
 
@@ -35,9 +35,9 @@ Quick summary of what the module does.
 
 Perhaps a little code snippet.
 
-    use HTTP::Buildbot::Step;
+    use REST::Buildbot::Step;
 
-    my $foo = HTTP::Buildbot::Step->new();
+    my $foo = REST::Buildbot::Step->new();
     ...
 
 =head1 EXPORT
@@ -67,8 +67,8 @@ Dan Collins, C<< <DCOLLINS at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-http-buildbot at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=HTTP-Buildbot>.  I will be notified, and then you'll
+Please report any bugs or feature requests to C<bug-rest-buildbot at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=REST-Buildbot>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
 
@@ -78,7 +78,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc HTTP::Buildbot::Step
+    perldoc REST::Buildbot::Step
 
 
 You can also look for information at:
@@ -87,19 +87,19 @@ You can also look for information at:
 
 =item * RT: CPAN's request tracker (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=HTTP-Buildbot>
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=REST-Buildbot>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/HTTP-Buildbot>
+L<http://annocpan.org/dist/REST-Buildbot>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/HTTP-Buildbot>
+L<http://cpanratings.perl.org/d/REST-Buildbot>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/HTTP-Buildbot/>
+L<http://search.cpan.org/dist/REST-Buildbot/>
 
 =back
 
@@ -127,4 +127,4 @@ along with this program.  If not, see L<http://www.gnu.org/licenses/>.
 
 =cut
 
-1; # End of HTTP::Buildbot::Step
+1; # End of REST::Buildbot::Step
