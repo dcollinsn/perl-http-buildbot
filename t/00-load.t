@@ -7,15 +7,15 @@ use Test::More;
 plan tests => 9;
 
 BEGIN {
-    use_ok( 'HTTP::Buildbot' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::Builder' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::Build' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::BuildRequest' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::BuildSet' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::Change' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::Log' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::SourceStamp' ) || print "Bail out!\n";
-    use_ok( 'HTTP::Buildbot::Step' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::Builder' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::Build' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::BuildRequest' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::BuildSet' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::Change' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::Log' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::SourceStamp' ) || print "Bail out!\n";
+    use_ok( 'REST::Buildbot::Step' ) || print "Bail out!\n";
 }
 
-diag( "Testing HTTP::Buildbot $HTTP::Buildbot::VERSION, Perl $], $^X" );
+diag( "Testing REST::Buildbot $REST::Buildbot::VERSION, Perl $], $^X" );

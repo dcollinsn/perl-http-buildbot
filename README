@@ -1,4 +1,4 @@
-HTTP-Buildbot
+REST-Buildbot
 
 The README is used to introduce the module and provide instructions on
 how to install the module, any machine dependencies it may have (for
@@ -33,21 +33,21 @@ SUPPORT AND DOCUMENTATION
 After installing, you can find documentation for this module with the
 perldoc command.
 
-    perldoc HTTP::Buildbot
+    perldoc REST::Buildbot
 
 You can also look for information at:
 
     RT, CPAN's request tracker (report bugs here)
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=HTTP-Buildbot
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=REST-Buildbot
 
     AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/HTTP-Buildbot
+        http://annocpan.org/dist/REST-Buildbot
 
     CPAN Ratings
-        http://cpanratings.perl.org/d/HTTP-Buildbot
+        http://cpanratings.perl.org/d/REST-Buildbot
 
     Search CPAN
-        http://search.cpan.org/dist/HTTP-Buildbot/
+        http://search.cpan.org/dist/REST-Buildbot/
 
 
 LICENSE AND COPYRIGHT

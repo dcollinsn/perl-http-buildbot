@@ -14,5 +14,5 @@ inc/
 nytprof.out
 pod2htm*.tmp
 pm_to_blib
-HTTP-Buildbot-*
-HTTP-Buildbot-*.tar.gz
+REST-Buildbot-*
+REST-Buildbot-*.tar.gz

@@ -50,15 +50,15 @@ TODO: {
     "placeholder date/time"       => qr(Date/time)
   );
 
-  module_boilerplate_ok('lib/HTTP/Buildbot.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/Builder.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/Build.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/BuildRequest.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/BuildSet.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/Change.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/Log.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/SourceStamp.pm');
-  module_boilerplate_ok('lib/HTTP/Buildbot/Step.pm');
+  module_boilerplate_ok('lib/REST/Buildbot.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/Builder.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/Build.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/BuildRequest.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/BuildSet.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/Change.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/Log.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/SourceStamp.pm');
+  module_boilerplate_ok('lib/REST/Buildbot/Step.pm');
 
 
 }

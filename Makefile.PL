@@ -4,10 +4,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    NAME             => 'HTTP::Buildbot',
+    NAME             => 'REST::Buildbot',
     AUTHOR           => q{Dan Collins <DCOLLINS@cpan.org>},
-    VERSION_FROM     => 'lib/HTTP/Buildbot.pm',
-    ABSTRACT_FROM    => 'lib/HTTP/Buildbot.pm',
+    VERSION_FROM     => 'lib/REST/Buildbot.pm',
+    ABSTRACT_FROM    => 'lib/REST/Buildbot.pm',
     LICENSE          => 'gpl_3',
     PL_FILES         => {},
     MIN_PERL_VERSION => 5.006,
@@ -22,5 +22,5 @@ WriteMakefile(
         #'Foo::Bar::Module' => 5.0401,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'HTTP-Buildbot-*' },
+    clean => { FILES => 'REST-Buildbot-*' },
 );
