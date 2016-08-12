@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-plan tests => 3;
+plan tests => 11;
 
 sub not_in_file_ok {
     my ($filename, %regex) = @_;
@@ -51,6 +51,14 @@ TODO: {
   );
 
   module_boilerplate_ok('lib/HTTP/Buildbot.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/Builder.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/Build.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/BuildRequest.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/BuildSet.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/Change.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/Log.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/SourceStamp.pm');
+  module_boilerplate_ok('lib/HTTP/Buildbot/Step.pm');
 
 
 }

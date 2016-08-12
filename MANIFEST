@@ -1,6 +1,14 @@
 Build.PL
 Changes
 lib/HTTP/Buildbot.pm
+lib/HTTP/Buildbot/Build.pm
+lib/HTTP/Buildbot/Builder.pm
+lib/HTTP/Buildbot/BuildRequest.pm
+lib/HTTP/Buildbot/BuildSet.pm
+lib/HTTP/Buildbot/Change.pm
+lib/HTTP/Buildbot/Log.pm
+lib/HTTP/Buildbot/SourceStamp.pm
+lib/HTTP/Buildbot/Step.pm
 Makefile.PL
 MANIFEST			This list of files
 README
