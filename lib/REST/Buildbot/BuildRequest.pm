@@ -19,7 +19,7 @@ has 'waited_for'          => (is => 'rw', isa => 'Bool');
 
 =head1 NAME
 
-REST::Buildbot::BuildRequest - The great new REST::Buildbot::BuildRequest!
+REST::Buildbot::BuildRequest - Object class for the Buildbot v2 REST API
 
 =head1 VERSION
 
@@ -29,38 +29,11 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use REST::Buildbot::BuildRequest;
-
-    my $foo = REST::Buildbot::BuildRequest->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
-
-sub function1 {
-}
-
-=head2 function2
-
-=cut
-
-sub function2 {
-}
+This is a data-only class. It has no methods, only data accessors. The
+accessors are identical in name and type to the data provided by the
+Buildbot v2 REST API.
 
 =head1 AUTHOR
 
@@ -72,15 +45,11 @@ Please report any bugs or feature requests to C<bug-rest-buildbot at rt.cpan.org
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=REST-Buildbot>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 
-
-
-
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc REST::Buildbot::BuildRequest
-
 
 You can also look for information at:
 
