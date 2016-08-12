@@ -16,8 +16,9 @@ my $builder = Module::Build->new(
         'Test::More' => 0,
     },
     requires => {
-        #'ABC'              => 1.6,
-        #'Foo::Bar::Module' => 5.0401,
+        'Moose' => 0,
+        'LWP::UserAgent' => 0,
+        'JSON' => 0,
     },
     add_to_cleanup     => [ 'HTTP-Buildbot-*' ],
     create_makefile_pl => 'traditional',
