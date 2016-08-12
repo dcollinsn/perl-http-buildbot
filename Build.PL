@@ -5,7 +5,7 @@ use Module::Build;
 
 my $builder = Module::Build->new(
     module_name         => 'HTTP::Buildbot',
-    license             => 'artistic_2',
+    license             => 'gpl_3',
     dist_author         => q{Dan Collins <DCOLLINS@cpan.org>},
     dist_version_from   => 'lib/HTTP/Buildbot.pm',
     release_status      => 'stable',
