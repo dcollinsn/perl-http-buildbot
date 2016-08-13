@@ -4,13 +4,13 @@ use strict;
 use warnings;
 use Moose;
 use Moose::Util::TypeConstraints;
-use Buildbot::SourceStamp;
+use REST::Buildbot::SourceStamp;
 
-subtype 'ArrayRefOfSourceStamps', as 'ArrayRef[Buildbot::SourceStamp]';
+subtype 'ArrayRefOfSourceStamps', as 'ArrayRef[REST::Buildbot::SourceStamp]';
 
 coerce 'ArrayRefOfSourceStamps',
     from 'ArrayRef[HashRef]',
-    via { [ map {Buildbot::SourceStamp->new(%$_)} @$_ ] };
+    via { [ map {REST::Buildbot::SourceStamp->new(%$_)} @$_ ] };
 
 has 'bsid'                => (is => 'rw', isa => 'Int');
 has 'complete_at'         => (is => 'rw', isa => 'Maybe[Int]');

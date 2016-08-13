@@ -4,13 +4,13 @@ use strict;
 use warnings;
 use Moose;
 use Moose::Util::TypeConstraints;
-use Buildbot::SourceStamp;
+use REST::Buildbot::SourceStamp;
 
-subtype 'SourceStamp', as 'Buildbot::SourceStamp';
+subtype 'SourceStamp', as 'REST::Buildbot::SourceStamp';
 
 coerce 'SourceStamp',
     from 'HashRef',
-    via { Buildbot::SourceStamp->new(%$_) };
+    via { REST::Buildbot::SourceStamp->new(%$_) };
 
 has 'changeid'         => (is => 'rw', isa => 'Int');
 has 'when_timestamp'   => (is => 'rw', isa => 'Int');

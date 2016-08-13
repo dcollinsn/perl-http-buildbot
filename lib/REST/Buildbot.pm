@@ -185,7 +185,7 @@ sub _build_builders {
     my $ret = {};
 
     foreach my $b (@{$data->{'builders'}}) {
-        $ret->{$b->{'builderid'}} = Buildbot::Builder->new(%$b);
+        $ret->{$b->{'builderid'}} = REST::Buildbot::Builder->new(%$b);
     }
 
     return $ret;
@@ -229,7 +229,7 @@ sub get_builds {
     my $ret = [];
 
     foreach my $b (@{$data->{'builds'}}) {
-        push @$ret, Buildbot::Build->new(%$b);
+        push @$ret, REST::Buildbot::Build->new(%$b);
     }
 
     return $ret;
@@ -251,7 +251,7 @@ sub get_buildrequests {
     my $ret = [];
 
     foreach my $br (@{$data->{'buildrequests'}}) {
-        push @$ret, Buildbot::BuildRequest->new(%$br);
+        push @$ret, REST::Buildbot::BuildRequest->new(%$br);
     }
 
     return $ret;
@@ -265,7 +265,7 @@ sub get_buildsets {
     my $ret = [];
 
     foreach my $bs (@{$data->{'buildsets'}}) {
-        push @$ret, Buildbot::BuildSet->new(%$bs);
+        push @$ret, REST::Buildbot::BuildSet->new(%$bs);
     }
 
     return $ret;
@@ -279,7 +279,7 @@ sub get_changes {
     my $ret = [];
 
     foreach my $c (@{$data->{'changes'}}) {
-        push @$ret, Buildbot::Change->new(%$c);
+        push @$ret, REST::Buildbot::Change->new(%$c);
     }
 
     return $ret;
@@ -293,7 +293,7 @@ sub get_logs {
     my $ret = [];
 
     foreach my $l (@{$data->{'logs'}}) {
-        push @$ret, Buildbot::Log->new(%$l);
+        push @$ret, REST::Buildbot::Log->new(%$l);
     }
 
     return $ret;
@@ -307,7 +307,7 @@ sub get_sourcestamps {
     my $ret = [];
 
     foreach my $ss (@{$data->{'sourcestamps'}}) {
-        push @$ret, Buildbot::SourceStamp->new(%$ss);
+        push @$ret, REST::Buildbot::SourceStamp->new(%$ss);
     }
 
     return $ret;
@@ -321,7 +321,7 @@ sub get_steps {
     my $ret = [];
 
     foreach my $s (@{$data->{'steps'}}) {
-        push @$ret, Buildbot::Step->new(%$s);
+        push @$ret, REST::Buildbot::Step->new(%$s);
     }
 
     return $ret;
@@ -355,7 +355,7 @@ sub get_build_by_id {
 
     my $data = $self->_get('builds/'.$id);
 
-    my $ret = Buildbot::Build->new(%{$data->{'builds'}->[0]});
+    my $ret = REST::Buildbot::Build->new(%{$data->{'builds'}->[0]});
 
     return $ret;
 }
@@ -377,7 +377,7 @@ sub get_buildrequest_by_id {
 
     my $data = $self->_get('buildrequests/'.$id);
 
-    my $ret = Buildbot::BuildRequest->new(%{$data->{'buildrequests'}->[0]});
+    my $ret = REST::Buildbot::BuildRequest->new(%{$data->{'buildrequests'}->[0]});
 
     return $ret;
 }
@@ -388,7 +388,7 @@ sub get_buildset_by_id {
 
     my $data = $self->_get('buildsets/'.$id);
 
-    my $ret = Buildbot::BuildSet->new(%{$data->{'buildsets'}->[0]});
+    my $ret = REST::Buildbot::BuildSet->new(%{$data->{'buildsets'}->[0]});
 
     return $ret;
 }
@@ -399,7 +399,7 @@ sub get_change_by_id {
 
     my $data = $self->_get('changes/'.$id);
 
-    my $ret = Buildbot::Change->new(%{$data->{'changes'}->[0]});
+    my $ret = REST::Buildbot::Change->new(%{$data->{'changes'}->[0]});
 
     return $ret;
 }
@@ -410,7 +410,7 @@ sub get_log_by_id {
 
     my $data = $self->_get('logs/'.$id);
 
-    my $ret = Buildbot::Log->new(%{$data->{'logs'}->[0]});
+    my $ret = REST::Buildbot::Log->new(%{$data->{'logs'}->[0]});
 
     return $ret;
 }
@@ -421,7 +421,7 @@ sub get_sourcestamp_by_id {
 
     my $data = $self->_get('sourcestamps/'.$id);
 
-    my $ret = Buildbot::SourceStamp->new(%{$data->{'sourcestamps'}->[0]});
+    my $ret = REST::Buildbot::SourceStamp->new(%{$data->{'sourcestamps'}->[0]});
 
     return $ret;
 }
@@ -432,7 +432,7 @@ sub get_step_by_id {
 
     my $data = $self->_get('steps/'.$id);
 
-    my $ret = Buildbot::Step->new(%{$data->{'steps'}->[0]});
+    my $ret = REST::Buildbot::Step->new(%{$data->{'steps'}->[0]});
 
     return $ret;
 }
@@ -447,7 +447,7 @@ sub get_buildsets_by_revision {
 
     foreach my $bs (@{$data->{'buildsets'}}) {
         next unless (grep {$_->revision eq $rev} @{$bs->sourcestamps});
-        push @$ret, Buildbot::BuildSet->new(%$bs);
+        push @$ret, REST::Buildbot::BuildSet->new(%$bs);
     }
 
     return $ret;
@@ -497,7 +497,7 @@ sub get_buildrequests_by_builder {
     my $ret = [];
 
     foreach my $br (@{$data->{'buildrequests'}}) {
-        push @$ret, Buildbot::BuildRequest->new(%$br);
+        push @$ret, REST::Buildbot::BuildRequest->new(%$br);
     }
 
     return $ret;
@@ -512,7 +512,7 @@ sub get_buildrequests_by_buildset {
     my $ret = [];
 
     foreach my $br (@{$data->{'buildrequests'}}) {
-        push @$ret, Buildbot::BuildRequest->new(%$br);
+        push @$ret, REST::Buildbot::BuildRequest->new(%$br);
     }
 
     return $ret;
@@ -527,7 +527,7 @@ sub get_builds_by_builder {
     my $ret = [];
 
     foreach my $b (@{$data->{'builds'}}) {
-        push @$ret, Buildbot::Build->new(%$b);
+        push @$ret, REST::Buildbot::Build->new(%$b);
     }
 
     return $ret;
@@ -542,7 +542,7 @@ sub get_builds_by_buildrequest {
     my $ret = [];
 
     foreach my $b (@{$data->{'builds'}}) {
-        push @$ret, Buildbot::Build->new(%$b);
+        push @$ret, REST::Buildbot::Build->new(%$b);
     }
 
     return $ret;
@@ -559,7 +559,7 @@ sub get_steps_by_build {
     foreach my $s (sort {$a->{'number'} <=> $b->{'number'}}
                         @{$data->{'steps'}}
     ) {
-        push @$ret, Buildbot::Step->new(%$s);
+        push @$ret, REST::Buildbot::Step->new(%$s);
     }
 
     return $ret;
@@ -576,7 +576,7 @@ sub get_logs_by_step {
     foreach my $l (sort {$a->{'logid'} <=> $b->{'logid'}}
                         @{$data->{'logs'}}
     ) {
-        push @$ret, Buildbot::Log->new(%$l);
+        push @$ret, REST::Buildbot::Log->new(%$l);
     }
 
     return $ret;
@@ -674,7 +674,7 @@ sub get_changes_by_revision {
     my $ret = [];
 
     foreach my $c (@{$data->{'changes'}}) {
-        push @$ret, Buildbot::Change->new(%$c);
+        push @$ret, REST::Buildbot::Change->new(%$c);
     }
 
     return $ret;
@@ -698,7 +698,7 @@ sub get_build_by_builder_and_number {
 
     my $data = $self->_get('builders/'.$builderid.'/builds/'.$buildnum);
 
-    my $ret = Buildbot::Build->new(%{$data->{'builds'}->[0]});
+    my $ret = REST::Buildbot::Build->new(%{$data->{'builds'}->[0]});
 
     return $ret;
 }
