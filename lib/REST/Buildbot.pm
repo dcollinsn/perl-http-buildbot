@@ -140,7 +140,7 @@ properties of a BuildSet, to get a source control revision.
 Finally, it is possible to get the text of a log object using
 get_log_text.
 
-=head 1 ERROR HANDLING
+=head1 ERROR HANDLING
 
 REST::Buildbot will die on a LWP::UserAgent error or on calling a
 method without a required parameter. This is not guaranteed to
@@ -151,7 +151,7 @@ If no items are found for a query, REST::Buildbot will return undef,
 for methods returning a single object, or an empty array ref, for
 methods potentially returning multiple objects.
 
-=head 1 CACHING
+=head1 CACHING
 
 REST::Buildbot may cache the results of common calls, such as the
 list of all builders. In general, you should assume that data is no
@@ -469,6 +469,8 @@ The following items return an object of the target type, or die on failure.
 =item get_build_by_step
 =item get_step_by_log
 =item get_sourcestamp_by_change
+
+=back
 
 =cut
 
