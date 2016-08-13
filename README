@@ -1,16 +1,14 @@
-REST-Buildbot
+REST::Buildbot - Interface to the Buildbot v2 REST API
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Version 0.01
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
-
+This is an interface to the REST API provided by Buildbot instances. Most
+object types can be fetched by name or id, and most object types can be
+used to look up associated objects. The individual objects have no methods,
+but do have accessors for all of the data returned by the REST API. Most
+attributes are pure perl data types, the only exception is BuildSets and
+Changes, both of which have an attribute that contains a
+REST::BuildBot::SourceStamp or an arrayref of them.
 
 INSTALLATION
 
