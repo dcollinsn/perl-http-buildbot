@@ -446,7 +446,7 @@ sub get_buildsets_by_revision {
     my $ret = [];
 
     foreach my $bs (@{$data->{'buildsets'}}) {
-        next unless (grep {$_->revision eq $rev} @{$bs->sourcestamps});
+        next unless (grep {$_->{'revision'} eq $rev} @{$bs->{'sourcestamps'}});
         push @$ret, REST::Buildbot::BuildSet->new(%$bs);
     }
 
