@@ -437,22 +437,6 @@ sub get_step_by_id {
     return $ret;
 }
 
-sub get_buildsets_by_revision {
-    my $self = shift;
-    my $rev = shift || die "get_buildsets_by_revision requires a revision";
-
-    my $data = $self->_get('buildsets');
-
-    my $ret = [];
-
-    foreach my $bs (@{$data->{'buildsets'}}) {
-        next unless (grep {$_->{'revision'} eq $rev} @{$bs->{'sourcestamps'}});
-        push @$ret, REST::Buildbot::BuildSet->new(%$bs);
-    }
-
-    return $ret;
-}
-
 =head2 get_*_by_*
 
 This is the set of methods that employs the relationships between data
@@ -675,6 +659,30 @@ sub get_changes_by_revision {
 
     foreach my $c (@{$data->{'changes'}}) {
         push @$ret, REST::Buildbot::Change->new(%$c);
+    }
+
+    return $ret;
+}
+
+=head2 get_buildsets_by_revision
+
+Looks up buildsets by a revision string. Returns a reference to an array
+of REST::Buildbot::BuildSet objects. If there are no results, the reference
+will be to an empty array.
+
+=cut
+
+sub get_buildsets_by_revision {
+    my $self = shift;
+    my $rev = shift || die "get_buildsets_by_revision requires a revision";
+
+    my $data = $self->_get('buildsets');
+
+    my $ret = [];
+
+    foreach my $bs (@{$data->{'buildsets'}}) {
+        next unless (grep {$_->{'revision'} eq $rev} @{$bs->{'sourcestamps'}});
+        push @$ret, REST::Buildbot::BuildSet->new(%$bs);
     }
 
     return $ret;
