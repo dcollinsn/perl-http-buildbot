@@ -1,5 +1,10 @@
 Revision history for REST-Buildbot
 
+0.02    Unreleased
+        * Add proper error handling
+        * Fix dependencies in Makefile.PL
+        
+
 0.01    August 12, 2016, 20:20 EDT
         Initial releast of REST::Buildbot. Limitations:
         * Error handling is virtually nonexistant

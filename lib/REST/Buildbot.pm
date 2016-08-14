@@ -20,6 +20,7 @@ has '_ua' => (is => 'ro', isa => 'LWP::UserAgent',
              default => sub {LWP::UserAgent->new});
 has '_builders' => (is => 'ro', isa => 'HashRef[REST::Buildbot::Builder]',
                    lazy => 1, builder => '_build_builders');
+has 'errorstr' => (is => 'ro', isa => 'Maybe[Str]');
 
 
 =head1 NAME
@@ -142,10 +143,10 @@ get_log_text.
 
 =head1 ERROR HANDLING
 
-REST::Buildbot will die on a LWP::UserAgent error or on calling a
-method without a required parameter. This is not guaranteed to
-remain the case, when I get around to it, I intend to improve that
-aspect of error handling.
+On error, REST::Buildbot methods will return undef and set an error
+string, which can be accessed by ->errorstr. An error is defined as
+an LWP::UserAgent error, a lookup by an ID that does not exist, or
+calling a method with insufficient or incorrect arguments.
 
 If no items are found for a query, REST::Buildbot will return undef,
 for methods returning a single object, or an empty array ref, for
@@ -169,7 +170,7 @@ sub _get {
     my $query = shift;
 
     my $res = $self->_ua->get($self->url.$query);
-    die $res->status_line unless $res->is_success;
+    return $self->_set_err($res->status_line) unless $res->is_success;
 
     my $content = $res->decoded_content;
     my $ret = decode_json($content);
@@ -189,6 +190,16 @@ sub _build_builders {
     }
 
     return $ret;
+}
+
+# Returns undef, it is safe to return $self->_set_err
+sub _set_err {
+    my $self = shift;
+    my $errstr = shift || "An error has occurred";
+    
+    $self->{'errstr'} = $errstr;
+    
+    return;
 }
 
 =head1 METHODS
@@ -351,7 +362,7 @@ methods return undef.
 
 sub get_build_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('builds/'.$id);
 
@@ -362,9 +373,9 @@ sub get_build_by_id {
 
 sub get_builder_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
-    die "No such builder with id $id" unless exists $self->_builders->{$id};
+    return $self->_set_err("No such builder with id $id") unless exists $self->_builders->{$id};
     
     my $ret = $self->_builders->{$id};
 
@@ -373,7 +384,7 @@ sub get_builder_by_id {
 
 sub get_buildrequest_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('buildrequests/'.$id);
 
@@ -384,7 +395,7 @@ sub get_buildrequest_by_id {
 
 sub get_buildset_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('buildsets/'.$id);
 
@@ -395,7 +406,7 @@ sub get_buildset_by_id {
 
 sub get_change_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('changes/'.$id);
 
@@ -406,7 +417,7 @@ sub get_change_by_id {
 
 sub get_log_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('logs/'.$id);
 
@@ -417,7 +428,7 @@ sub get_log_by_id {
 
 sub get_sourcestamp_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('sourcestamps/'.$id);
 
@@ -428,7 +439,7 @@ sub get_sourcestamp_by_id {
 
 sub get_step_by_id {
     my $self = shift;
-    my $id = shift || die 'REST::Buildbot::get_*_by_id requires an id';
+    my $id = shift || return $self->_set_err('REST::Buildbot::get_*_by_id requires an id');
 
     my $data = $self->_get('steps/'.$id);
 
@@ -458,7 +469,7 @@ any number of the target type:
 
 =back
 
-The following items return an object of the target type, or die on failure.
+The following items return an object of the target type, or undef on failure.
 
 =over 4
 
@@ -476,7 +487,7 @@ The following items return an object of the target type, or die on failure.
 
 sub get_buildrequests_by_builder {
     my $self = shift;
-    my $builder = shift || die "get_buildrequests_by_builder requires a builder";
+    my $builder = shift || return $self->_set_err("get_buildrequests_by_builder requires a builder");
 
     my $data = $self->_get('buildrequests?builderid='.$builder->builderid);
 
@@ -491,7 +502,7 @@ sub get_buildrequests_by_builder {
 
 sub get_buildrequests_by_buildset {
     my $self = shift;
-    my $buildset = shift || die "get_buildrequests_by_buildset requires a buildset id";
+    my $buildset = shift || return $self->_set_err("get_buildrequests_by_buildset requires a buildset id");
 
     my $data = $self->_get('buildrequests?buildsetid='.$buildset->bsid);
 
@@ -506,7 +517,7 @@ sub get_buildrequests_by_buildset {
 
 sub get_builds_by_builder {
     my $self = shift;
-    my $builder = shift || die "get_builds_by_builder requires a builder";
+    my $builder = shift || return $self->_set_err("get_builds_by_builder requires a builder");
 
     my $data = $self->_get('builds?builderid='.$builder->builderid);
 
@@ -521,7 +532,7 @@ sub get_builds_by_builder {
 
 sub get_builds_by_buildrequest {
     my $self = shift;
-    my $request = shift || die "get_builds_by_buildrequest requires a buildrequest";
+    my $request = shift || return $self->_set_err("get_builds_by_buildrequest requires a buildrequest");
 
     my $data = $self->_get('builds?buildrequestid='.$request->buildrequestid);
 
@@ -536,7 +547,7 @@ sub get_builds_by_buildrequest {
 
 sub get_steps_by_build {
     my $self = shift;
-    my $build = shift || die "get_steps_by_build requires a build";
+    my $build = shift || return $self->_set_err("get_steps_by_build requires a build");
 
     my $data = $self->_get('builds/'.$build->buildid.'/steps');
 
@@ -553,7 +564,7 @@ sub get_steps_by_build {
 
 sub get_logs_by_step {
     my $self = shift;
-    my $step = shift || die "get_logs_by_step requires a step";
+    my $step = shift || return $self->_set_err("get_logs_by_step requires a step");
 
     my $data = $self->_get('steps/'.$step->stepid.'/logs');
 
@@ -570,56 +581,56 @@ sub get_logs_by_step {
 
 sub get_sourcestamps_by_buildset {
     my $self = shift;
-    my $buildset = shift || die "get_sourcestamps_by_buildset requires a buildset";
+    my $buildset = shift || return $self->_set_err("get_sourcestamps_by_buildset requires a buildset");
     
     return $buildset->sourcestamps;
 }
 
 sub get_builder_by_buildrequest {
     my $self = shift;
-    my $buildrequest = shift || die "get_builder_by_buildrequest requires a buildrequest";
+    my $buildrequest = shift || return $self->_set_err("get_builder_by_buildrequest requires a buildrequest");
 
     return $self->get_builder_by_id($buildrequest->builderid);
 }
 
 sub get_buildset_by_buildrequest {
     my $self = shift;
-    my $buildrequest = shift || die "get_buildset_by_buildrequest requires a buildrequest";
+    my $buildrequest = shift || return $self->_set_err("get_buildset_by_buildrequest requires a buildrequest");
 
     return $self->get_buildset_by_id($buildrequest->buildsetid);
 }
 
 sub get_builder_by_build {
     my $self = shift;
-    my $build = shift || die "get_builder_by_build requires a build";
+    my $build = shift || return $self->_set_err("get_builder_by_build requires a build");
 
     return $self->get_builder_by_id($build->builderid);
 }
 
 sub get_buildrequest_by_build {
     my $self = shift;
-    my $build = shift || die "get_buildrequest_by_build requires a build";
+    my $build = shift || return $self->_set_err("get_buildrequest_by_build requires a build");
 
     return $self->get_buildrequest_by_id($build->buildrequestid);
 }
 
 sub get_build_by_step {
     my $self = shift;
-    my $step = shift || die "get_build_by_step requires a step";
+    my $step = shift || return $self->_set_err("get_build_by_step requires a step");
 
     return $self->get_build_by_id($step->buildid);
 }
 
 sub get_step_by_log {
     my $self = shift;
-    my $log = shift || die "get_step_by_log requires a log";
+    my $log = shift || return $self->_set_err("get_step_by_log requires a log");
 
     return $self->get_step_by_id($log->stepid);
 }
 
 sub get_sourcestamp_by_change {
     my $self = shift;
-    my $change = shift || die "get_sourcestamp_by_change requires a change";
+    my $change = shift || return $self->_set_err("get_sourcestamp_by_change requires a change");
 
     return $change->sourcestamp;
 }
@@ -627,17 +638,17 @@ sub get_sourcestamp_by_change {
 =head2 get_builder_by_name
 
 Looks up a builder by name. Returns a REST::Buildbot::Builder object.
-Dies if there is not exactly one builder with a matching name.
+Returns undef if there is not exactly one builder with a matching name.
 
 =cut
 
 sub get_builder_by_name {
     my $self = shift;
-    my $name = shift || die "get_builder_by_name requires a builder name";
+    my $name = shift || return $self->_set_err("get_builder_by_name requires a builder name");
 
     my @res = grep {$_->name eq $name} values %{$self->_builders};
-    die "ambiguous builder name $name" if @res > 1;
-    die "no such builder name $name" if @res == 0;
+    return $self->_set_err("ambiguous builder name $name") if @res > 1;
+    return $self->_set_err("no such builder name $name") if @res == 0;
     my $ret = $res[0];
 
     return $ret;
@@ -653,7 +664,7 @@ will be to an empty array.
 
 sub get_changes_by_revision {
     my $self = shift;
-    my $rev = shift || die "get_changes_by_revision requires a revision string";
+    my $rev = shift || return $self->_set_err("get_changes_by_revision requires a revision string");
 
     my $data = $self->_get('changes?revision='.$rev);
 
@@ -676,7 +687,7 @@ will be to an empty array.
 
 sub get_buildsets_by_revision {
     my $self = shift;
-    my $rev = shift || die "get_buildsets_by_revision requires a revision";
+    my $rev = shift || return $self->_set_err("get_buildsets_by_revision requires a revision");
 
     my $data = $self->_get('buildsets');
 
@@ -692,17 +703,17 @@ sub get_buildsets_by_revision {
 
 =head2 get_build_by_builder_and_number
 
-Looks up a build using the Builder object and the build number.
-Returns a REST::Buildbot::Build object. Dies if there is no match.
+Looks up a build using the Builder object and the build number. Returns
+a REST::Buildbot::Build object. Returns undef if there is no match.
 
 =cut
 
 sub get_build_by_builder_and_number {
     my $self = shift;
     my $builder = shift ||
-        die "get_build_by_builder_and_number requires a builder object";
+        return $self->_set_err("get_build_by_builder_and_number requires a builder object");
     my $buildnum = shift ||
-        die "get_build_by_builder_and_number requires a build number";
+        return $self->_set_err("get_build_by_builder_and_number requires a build number");
 
     my $builderid = $builder->builderid;
 
@@ -715,16 +726,16 @@ sub get_build_by_builder_and_number {
 
 =head2 get_log_text
 
-Returns the contents of a log as a string. Dies on failure.
+Returns the contents of a log as a string. Returns undef on failure.
 
 =cut
 
 sub get_log_text {
     my $self = shift;
-    my $log = shift || die "get_log_text requires a log";
+    my $log = shift || return $self->_set_err("get_log_text requires a log");
 
     my $res = $self->_ua->get($self->url.'logs/'.$log->logid.'/raw');
-    die $res->status_line unless $res->is_success;
+    return $self->_set_err($res->status_line) unless $res->is_success;
 
     my $ret = $res->decoded_content;
 
