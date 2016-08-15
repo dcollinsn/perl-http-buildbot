@@ -1,5 +1,8 @@
 Revision history for REST-Buildbot
 
+0.03    Unreleased
+        * Fix error handling bug - _reqd_arg needs $self
+
 0.02    August 14, 2016, 11:40 EDT
         * Add proper error handling
         * Fix dependencies in Makefile.PL

@@ -1,6 +1,6 @@
 REST::Buildbot - Interface to the Buildbot v2 REST API
 
-Version 0.02
+Version 0.03
 
 This is an interface to the REST API provided by Buildbot instances. Most
 object types can be fetched by name or id, and most object types can be

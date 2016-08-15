@@ -29,11 +29,11 @@ REST::Buildbot - Interface to the Buildbot v2 REST API
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -203,12 +203,13 @@ sub _set_err {
 }
 
 sub _reqd_arg {
+    my $self = shift;
     my $arg = shift;
     my $type = shift;
     
     my ($package, $sub) = (caller(1))[0, 3];
     my ($caller, $line) = (caller(2))[1, 2];
-    return _set_err($package.'::'.$sub.' requires an additional argument ' .
+    return $self->_set_err($package.'::'.$sub.' requires an additional argument ' .
         ($type ? 'of type '.$type.' ' : '') .
         'at '.$caller.' line '.$line .'.'
         ) unless defined $arg && (!defined $type || ref $arg eq $type);
@@ -375,7 +376,7 @@ methods return undef.
 
 sub get_build_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('builds/'.$id);
 
@@ -386,7 +387,7 @@ sub get_build_by_id {
 
 sub get_builder_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     return $self->_set_err("No such builder with id $id") unless exists $self->_builders->{$id};
     
@@ -397,7 +398,7 @@ sub get_builder_by_id {
 
 sub get_buildrequest_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('buildrequests/'.$id);
 
@@ -408,7 +409,7 @@ sub get_buildrequest_by_id {
 
 sub get_buildset_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('buildsets/'.$id);
 
@@ -419,7 +420,7 @@ sub get_buildset_by_id {
 
 sub get_change_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('changes/'.$id);
 
@@ -430,7 +431,7 @@ sub get_change_by_id {
 
 sub get_log_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('logs/'.$id);
 
@@ -441,7 +442,7 @@ sub get_log_by_id {
 
 sub get_sourcestamp_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('sourcestamps/'.$id);
 
@@ -452,7 +453,7 @@ sub get_sourcestamp_by_id {
 
 sub get_step_by_id {
     my $self = shift;
-    my $id = _reqd_arg(shift) // return;
+    my $id = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('steps/'.$id);
 
@@ -500,7 +501,7 @@ The following items return an object of the target type, or undef on failure.
 
 sub get_buildrequests_by_builder {
     my $self = shift;
-    my $builder = _reqd_arg(shift, 'REST::Buildbot::Builder') // return;
+    my $builder = $self->_reqd_arg(shift, 'REST::Buildbot::Builder') // return;
 
     my $data = $self->_get('buildrequests?builderid='.$builder->builderid);
 
@@ -515,7 +516,7 @@ sub get_buildrequests_by_builder {
 
 sub get_buildrequests_by_buildset {
     my $self = shift;
-    my $buildset = _reqd_arg(shift, 'REST::Buildbot::BuildSet') // return;
+    my $buildset = $self->_reqd_arg(shift, 'REST::Buildbot::BuildSet') // return;
 
     my $data = $self->_get('buildrequests?buildsetid='.$buildset->bsid);
 
@@ -530,7 +531,7 @@ sub get_buildrequests_by_buildset {
 
 sub get_builds_by_builder {
     my $self = shift;
-    my $builder = _reqd_arg(shift, 'REST::Buildbot::Builder') // return;
+    my $builder = $self->_reqd_arg(shift, 'REST::Buildbot::Builder') // return;
 
     my $data = $self->_get('builds?builderid='.$builder->builderid);
 
@@ -545,7 +546,7 @@ sub get_builds_by_builder {
 
 sub get_builds_by_buildrequest {
     my $self = shift;
-    my $request = _reqd_arg(shift, 'REST::Buildbot::BuildRequest') // return;
+    my $request = $self->_reqd_arg(shift, 'REST::Buildbot::BuildRequest') // return;
 
     my $data = $self->_get('builds?buildrequestid='.$request->buildrequestid);
 
@@ -560,7 +561,7 @@ sub get_builds_by_buildrequest {
 
 sub get_steps_by_build {
     my $self = shift;
-    my $build = _reqd_arg(shift, 'REST::Buildbot::Build') // return;
+    my $build = $self->_reqd_arg(shift, 'REST::Buildbot::Build') // return;
 
     my $data = $self->_get('builds/'.$build->buildid.'/steps');
 
@@ -577,7 +578,7 @@ sub get_steps_by_build {
 
 sub get_logs_by_step {
     my $self = shift;
-    my $step = _reqd_arg(shift, 'REST::Buildbot::Step') // return;
+    my $step = $self->_reqd_arg(shift, 'REST::Buildbot::Step') // return;
 
     my $data = $self->_get('steps/'.$step->stepid.'/logs');
 
@@ -594,56 +595,56 @@ sub get_logs_by_step {
 
 sub get_sourcestamps_by_buildset {
     my $self = shift;
-    my $buildset = _reqd_arg(shift, 'REST::Buildbot::BuildSet') // return;
+    my $buildset = $self->_reqd_arg(shift, 'REST::Buildbot::BuildSet') // return;
     
     return $buildset->sourcestamps;
 }
 
 sub get_builder_by_buildrequest {
     my $self = shift;
-    my $buildrequest = _reqd_arg(shift, 'REST::Buildbot::BuildRequest') // return;
+    my $buildrequest = $self->_reqd_arg(shift, 'REST::Buildbot::BuildRequest') // return;
 
     return $self->get_builder_by_id($buildrequest->builderid);
 }
 
 sub get_buildset_by_buildrequest {
     my $self = shift;
-    my $buildrequest = _reqd_arg(shift, 'REST::Buildbot::BuildRequest') // return;
+    my $buildrequest = $self->_reqd_arg(shift, 'REST::Buildbot::BuildRequest') // return;
 
     return $self->get_buildset_by_id($buildrequest->buildsetid);
 }
 
 sub get_builder_by_build {
     my $self = shift;
-    my $build = _reqd_arg(shift, 'REST::Buildbot::Build') // return;
+    my $build = $self->_reqd_arg(shift, 'REST::Buildbot::Build') // return;
 
     return $self->get_builder_by_id($build->builderid);
 }
 
 sub get_buildrequest_by_build {
     my $self = shift;
-    my $build = _reqd_arg(shift, 'REST::Buildbot::Build') // return;
+    my $build = $self->_reqd_arg(shift, 'REST::Buildbot::Build') // return;
 
     return $self->get_buildrequest_by_id($build->buildrequestid);
 }
 
 sub get_build_by_step {
     my $self = shift;
-    my $step = _reqd_arg(shift, 'REST::Buildbot::Step') // return;
+    my $step = $self->_reqd_arg(shift, 'REST::Buildbot::Step') // return;
 
     return $self->get_build_by_id($step->buildid);
 }
 
 sub get_step_by_log {
     my $self = shift;
-    my $log = _reqd_arg(shift, 'REST::Buildbot::Log') // return;
+    my $log = $self->_reqd_arg(shift, 'REST::Buildbot::Log') // return;
 
     return $self->get_step_by_id($log->stepid);
 }
 
 sub get_sourcestamp_by_change {
     my $self = shift;
-    my $change = _reqd_arg(shift, 'REST::Buildbot::Change') // return;
+    my $change = $self->_reqd_arg(shift, 'REST::Buildbot::Change') // return;
 
     return $change->sourcestamp;
 }
@@ -657,7 +658,7 @@ Returns undef if there is not exactly one builder with a matching name.
 
 sub get_builder_by_name {
     my $self = shift;
-    my $name = _reqd_arg(shift) // return;
+    my $name = $self->_reqd_arg(shift) // return;
 
     my @res = grep {$_->name eq $name} values %{$self->_builders};
     return $self->_set_err("ambiguous builder name $name") if @res > 1;
@@ -677,7 +678,7 @@ will be to an empty array.
 
 sub get_changes_by_revision {
     my $self = shift;
-    my $rev = _reqd_arg(shift) // return;
+    my $rev = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('changes?revision='.$rev);
 
@@ -700,7 +701,7 @@ will be to an empty array.
 
 sub get_buildsets_by_revision {
     my $self = shift;
-    my $rev = _reqd_arg(shift) // return;
+    my $rev = $self->_reqd_arg(shift) // return;
 
     my $data = $self->_get('buildsets');
 
@@ -723,8 +724,8 @@ a REST::Buildbot::Build object. Returns undef if there is no match.
 
 sub get_build_by_builder_and_number {
     my $self = shift;
-    my $builder = _reqd_arg(shift, 'REST::Buildbot::Builder') // return;
-    my $buildnum = _reqd_arg(shift) // return;
+    my $builder = $self->_reqd_arg(shift, 'REST::Buildbot::Builder') // return;
+    my $buildnum = $self->_reqd_arg(shift) // return;
 
     my $builderid = $builder->builderid;
 
@@ -743,7 +744,7 @@ Returns the contents of a log as a string. Returns undef on failure.
 
 sub get_log_text {
     my $self = shift;
-    my $log = _reqd_arg(shift, 'REST::Buildbot::Log') // return;
+    my $log = $self->_reqd_arg(shift, 'REST::Buildbot::Log') // return;
 
     my $res = $self->_ua->get($self->url.'logs/'.$log->logid.'/raw');
     return $self->_set_err($res->status_line) unless $res->is_success;
